@@ -37,16 +37,30 @@
                                         <div class="flex gap-4 items-center">
                                             <span class="text-xs text-gray-500">{{ $review->created_at->diffForHumans() }}</span>
                                             <a href="{{ route('reviews.edit', $review) }}" class="text-blue-600 hover:underline text-sm">Edit</a>
-                                        <form action="{{ route('reviews.destroy', $review) }}" method="POST" class="inline" onsubmit="return confirm('Delete this review?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:underline text-sm">Delete</button>
-                                        </form>
+                                            <form action="{{ route('reviews.destroy', $review) }}" method="POST" class="inline" onsubmit="return confirm('Delete this review?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-red-600 hover:underline text-sm">Delete</button>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                @endforeach
-            </div>
+                    @endforeach
+                </div>
+
+                <div class="mt-6">
+                    {{ $reviews->links() }}
+                </div>
+            @else
+                <div class="bg-white p-8 rounded-lg shadow text-center">
+                    <p class="text-gray-500 mb-4">You haven't written any reviews yet.</p>
+                    <a href="{{ route('collections.index') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                        Go to My Collection
+                    </a>
+                </div>
+            @endif
+        </div>
+    </div>
 </x-app-layout>

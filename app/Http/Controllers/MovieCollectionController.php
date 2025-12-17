@@ -57,39 +57,32 @@ class MovieCollectionController extends Controller
     // Get movie details from TMDB
     $movieData = $this->tmdbService->getMovieDetails($validated['tmdb_movie_id']);
 
-    // Add to collection - EXPLICITLY SET user_id
-    MovieCollection::create([
-        'user_id' => auth()->id(),  // ← EXPLICITLY ADD THIS
-        'tmdb_movie_id' => $movieData['id'],
-        'title' => $movieData['title'],
-        'poster_path' => $movieData['poster_path'] ?? null,
-        'backdrop_path' => $movieData['backdrop_path'] ?? null,
-        'overview' => $movieData['overview'] ?? null,
-        'release_date' => $movieData['release_date'] ?? null,
-        'vote_average' => $movieData['vote_average'] ?? null,
-    ]);
+   // Add to collection - EXPLICITLY SET user_id
+$collection = MovieCollection::create([
+    'user_id' => auth()->id(),  // ← ADD THIS LINE
+    'tmdb_movie_id' => $movieData['id'],
+    'title' => $movieData['title'],
+    'poster_path' => $movieData['poster_path'] ?? null,
+    'backdrop_path' => $movieData['backdrop_path'] ?? null,
+    'overview' => $movieData['overview'] ?? null,
+    'release_date' => $movieData['release_date'] ?? null,
+    'vote_average' => $movieData['vote_average'] ?? null,
+]);
 
     return redirect()->route('collections.index')->with('success', 'Movie added to your collection!');
 }
 
-    public function show(MovieCollection $movieCollection)
-    {
-
-        dd([
-        'collection_user_id' => $movieCollection->user_id,
-        'logged_in_user_id' => auth()->id(),
-        'are_they_equal' => $movieCollection->user_id === auth()->id(),
-        'collection' => $movieCollection
-    ]);
-        // Simple type-safe check
-        if ((int)$movieCollection->user_id !== (int)auth()->id()) {
-            abort(403, 'Unauthorized - This is not your collection');
-        }
-        
-        $movieCollection->load('reviews.user');
-        
-        return view('collections.show', compact('movieCollection'));
+   public function show(MovieCollection $movieCollection)
+{
+    // Simple type-safe check
+    if ((int)$movieCollection->user_id !== (int)auth()->id()) {
+        abort(403, 'Unauthorized - This is not your collection');
     }
+    
+    $movieCollection->load('reviews.user');
+    
+    return view('collections.show', compact('movieCollection'));
+}
 
     public function edit(MovieCollection $movieCollection)
     {
