@@ -50,10 +50,12 @@ class ReviewController extends Controller
             'user_id' => auth()->id(),
             'rating' => $validated['rating'],
             'review_text' => $validated['review_text'],
+            // mark as pending approval by default
+            'is_approved' => false,
         ]);
 
         return redirect()->route('collections.show', $movieCollection)
-            ->with('success', 'Review added successfully!');
+            ->with('success', 'Review submitted and is pending admin approval.');
     }
 
     public function edit(Review $review)

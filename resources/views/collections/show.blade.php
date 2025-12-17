@@ -30,33 +30,35 @@
                                 class="w-full rounded-lg shadow-lg"
                             >
 
-                            <!-- Action Buttons -->
-                            <div class="mt-4 space-y-2">
-                                <form action="{{ route('collections.toggle-watched', $movieCollection) }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="w-full {{ $movieCollection->is_watched ? 'bg-gray-500' : 'bg-green-500' }} hover:opacity-90 text-white font-bold py-2 px-4 rounded">
-                                        {{ $movieCollection->is_watched ? 'Mark as Unwatched' : 'Mark as Watched' }}
-                                    </button>
-                                </form>
+                            <!-- Action Buttons (owner only) -->
+                            @if($isOwner)
+                                <div class="mt-4 space-y-2">
+                                    <form action="{{ route('collections.toggle-watched', $movieCollection) }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="w-full {{ $movieCollection->is_watched ? 'bg-gray-500' : 'bg-green-500' }} hover:opacity-90 text-white font-bold py-2 px-4 rounded">
+                                            {{ $movieCollection->is_watched ? 'Mark as Unwatched' : 'Mark as Watched' }}
+                                        </button>
+                                    </form>
 
-                                <a href="{{ route('collections.edit', $movieCollection) }}" class="block w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-center">
-                                    Edit Notes
-                                </a>
-
-                                @if($movieCollection->reviews->where('user_id', auth()->id())->isEmpty())
-                                    <a href="{{ route('reviews.create', $movieCollection) }}" class="block w-full bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded text-center">
-                                        Write Review
+                                    <a href="{{ route('collections.edit', $movieCollection) }}" class="block w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-center">
+                                        Edit Notes
                                     </a>
-                                @endif
 
-                                <form action="{{ route('collections.destroy', $movieCollection) }}" method="POST" onsubmit="return confirm('Remove this movie from your collection?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
-                                        Remove from Collection
-                                    </button>
-                                </form>
-                            </div>
+                                    @if($movieCollection->reviews->where('user_id', auth()->id())->isEmpty())
+                                        <a href="{{ route('reviews.create', $movieCollection) }}" class="block w-full bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded text-center">
+                                            Write Review
+                                        </a>
+                                    @endif
+
+                                    <form action="{{ route('collections.destroy', $movieCollection) }}" method="POST" onsubmit="return confirm('Remove this movie from your collection?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                                            Remove from Collection
+                                        </button>
+                                    </form>
+                                </div>
+                            @endif
                         </div>
 
                         <!-- Details -->
@@ -80,7 +82,7 @@
                                 {{ $movieCollection->overview ?? 'No overview available.' }}
                             </p>
 
-                            @if($movieCollection->personal_notes)
+                            @if($isOwner && $movieCollection->personal_notes)
                                 <h3 class="text-xl font-semibold mb-2">Personal Notes</h3>
                                 <div class="bg-yellow-50 p-4 rounded-lg mb-6">
                                     <p class="text-gray-700">{{ $movieCollection->personal_notes }}</p>
@@ -89,9 +91,9 @@
 
                             <!-- Reviews Section -->
                             <h3 class="text-xl font-semibold mb-4">Reviews</h3>
-                            @if($movieCollection->reviews->count() > 0)
+                            @if($visibleReviews->count() > 0)
                                 <div class="space-y-4">
-                                    @foreach($movieCollection->reviews as $review)
+                                    @foreach($visibleReviews as $review)
                                         <div class="bg-gray-50 p-4 rounded-lg">
                                             <div class="flex justify-between items-start mb-2">
                                                 <div>

@@ -10,8 +10,12 @@ use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
-});
+    if (auth()->check() && auth()->user()->isAdmin()) {
+        return redirect()->route('admin.dashboard');
+    }
+
+    return app(\App\Http\Controllers\MovieController::class)->index(request());
+})->name('home');
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -28,10 +32,12 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Movie Collections
-    Route::resource('collections', MovieCollectionController::class);
-    Route::post('collections/{collection}/toggle-watched', [MovieCollectionController::class, 'toggleWatched'])
-        ->name('collections.toggle-watched');
+    // Movie Collections (not available to admin users)
+    Route::middleware(\App\Http\Middleware\NotAdminMiddleware::class)->group(function () {
+        Route::resource('collections', MovieCollectionController::class);
+        Route::post('collections/{collection}/toggle-watched', [MovieCollectionController::class, 'toggleWatched'])
+            ->name('collections.toggle-watched');
+    });
 
     // Reviews
     Route::get('collections/{movieCollection}/reviews/create', [ReviewController::class, 'create'])

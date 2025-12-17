@@ -73,13 +73,20 @@ class MovieCollectionController extends Controller
 
    public function show(MovieCollection $collection)
 {
-    $this->authorize('view', $collection);
+    // Determine whether the current user is the owner or an admin
+    $isOwner = auth()->check() && ((int)auth()->id() === (int)$collection->user_id || auth()->user()->isAdmin());
 
+    // Load reviews with users
     $collection->load('reviews.user');
+
+    // Show only approved reviews to non-owners
+    $visibleReviews = $collection->reviews->filter(function ($review) use ($isOwner) {
+        return $isOwner || $review->is_approved;
+    });
 
     $movieCollection = $collection; // maintain view variable name
 
-    return view('collections.show', compact('movieCollection'));
+    return view('collections.show', compact('movieCollection', 'visibleReviews', 'isOwner'));
 }
 
     public function edit(MovieCollection $collection)

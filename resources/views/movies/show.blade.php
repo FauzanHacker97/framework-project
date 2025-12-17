@@ -9,13 +9,16 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    @if(empty($movie))
+                        <p class="text-gray-700">Movie details are not available at the moment.</p>
+                    @else
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <!-- Poster -->
                         <div>
                             @if(isset($movie['poster_path']))
                                 <img 
                                     src="https://image.tmdb.org/t/p/w500{{ $movie['poster_path'] }}" 
-                                    alt="{{ $movie['title'] }}"
+                                    alt="{{ $movie['title'] ?? 'Movie Title' }}"
                                     class="w-full rounded-lg shadow-lg"
                                 >
                             @else
@@ -32,7 +35,7 @@
                                 @else
                                     <form action="{{ route('collections.store') }}" method="POST" class="mt-4">
                                         @csrf
-                                        <input type="hidden" name="tmdb_movie_id" value="{{ $movie['id'] }}">
+                                        <input type="hidden" name="tmdb_movie_id" value="{{ $movie['id'] ?? '' }}">
                                         <button type="submit" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded">
                                             Add to Collection
                                         </button>
@@ -49,7 +52,7 @@
 
                         <!-- Details -->
                         <div class="md:col-span-2">
-                            <h1 class="text-4xl font-bold mb-4">{{ $movie['title'] }}</h1>
+                            <h1 class="text-4xl font-bold mb-4">{{ $movie['title'] ?? 'Movie Title' }}</h1>
                             
                             <div class="flex gap-4 mb-4 text-sm text-gray-600">
                                 @if(isset($movie['release_date']))
@@ -90,15 +93,41 @@
                                     @endforeach
                                 </p>
                             @endif
+
+                            <!-- Reviews -->
+                            <h3 class="text-xl font-semibold mb-2 mt-6">Reviews</h3>
+
+                            @if($reviews->count() > 0)
+                                <div class="mb-4 text-sm text-gray-600">Average Rating: {{ $averageRating ?? 'N/A' }} / 5 ({{ $reviews->count() }} reviews)</div>
+
+                                <div class="space-y-4">
+                                    @foreach($reviews as $review)
+                                        <div class="bg-gray-50 p-4 rounded-lg">
+                                            <div class="flex justify-between items-start mb-2">
+                                                <div>
+                                                    <p class="font-semibold">{{ $review->user->name }}</p>
+                                                    <p class="text-sm text-gray-600">{{ str_repeat('⭐', $review->rating) }} ({{ $review->rating }}/5)</p>
+                                                </div>
+                                            </div>
+                                            <p class="text-gray-700">{{ $review->review_text }}</p>
+                                            <p class="text-xs text-gray-500 mt-2">{{ $review->created_at->diffForHumans() }}</p>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <p class="text-gray-500">No reviews yet.</p>
+                            @endif
                         </div>
                     </div>
+
+                    @endif
 
                     <!-- Backdrop Image -->
                     @if(isset($movie['backdrop_path']))
                         <div class="mt-8">
                             <img 
                                 src="https://image.tmdb.org/t/p/original{{ $movie['backdrop_path'] }}" 
-                                alt="{{ $movie['title'] }} backdrop"
+                                alt="{{ $movie['title'] ?? 'Movie Title' }} backdrop"
                                 class="w-full rounded-lg shadow-lg"
                             >
                         </div>

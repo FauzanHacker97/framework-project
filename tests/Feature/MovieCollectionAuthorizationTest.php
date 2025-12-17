@@ -17,18 +17,24 @@ test('owner can view their movie collection', function () {
     $response->assertOk();
 });
 
-test('other users cannot view someone else\'s collection', function () {
+test('other users can view someone else\'s collection but not owner-only details', function () {
     $owner = User::factory()->create();
     $other = User::factory()->create();
 
     $collection = $owner->movieCollections()->create([
         'tmdb_movie_id' => 999998,
         'title' => 'Another Test Movie',
+        'personal_notes' => 'Secret info',
     ]);
 
     $response = $this
         ->actingAs($other)
         ->get(route('collections.show', $collection));
 
-    $response->assertForbidden();
+    $response->assertOk();
+
+    // Other users should not see owner-only controls or personal notes
+    $response->assertDontSee('Edit Notes');
+    $response->assertDontSee('Remove from Collection');
+    $response->assertDontSee('Secret info');
 });
