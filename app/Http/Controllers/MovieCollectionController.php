@@ -57,54 +57,56 @@ class MovieCollectionController extends Controller
     // Get movie details from TMDB
     $movieData = $this->tmdbService->getMovieDetails($validated['tmdb_movie_id']);
 
-   // Add to collection - EXPLICITLY SET user_id
-$collection = MovieCollection::create([
-    'user_id' => auth()->id(),  // ← ADD THIS LINE
-    'tmdb_movie_id' => $movieData['id'],
-    'title' => $movieData['title'],
-    'poster_path' => $movieData['poster_path'] ?? null,
-    'backdrop_path' => $movieData['backdrop_path'] ?? null,
-    'overview' => $movieData['overview'] ?? null,
-    'release_date' => $movieData['release_date'] ?? null,
-    'vote_average' => $movieData['vote_average'] ?? null,
-]);
+    // Add to collection via authenticated user's relationship (sets user_id automatically)
+    $collection = auth()->user()->movieCollections()->create([
+        'tmdb_movie_id' => $movieData['id'],
+        'title' => $movieData['title'],
+        'poster_path' => $movieData['poster_path'] ?? null,
+        'backdrop_path' => $movieData['backdrop_path'] ?? null,
+        'overview' => $movieData['overview'] ?? null,
+        'release_date' => $movieData['release_date'] ?? null,
+        'vote_average' => $movieData['vote_average'] ?? null,
+    ]);
 
     return redirect()->route('collections.index')->with('success', 'Movie added to your collection!');
 }
 
-   public function show(MovieCollection $movieCollection)
+   public function show(MovieCollection $collection)
 {
-    // Simple type-safe check
-    if ((int)$movieCollection->user_id !== (int)auth()->id()) {
-        abort(403, 'Unauthorized - This is not your collection');
-    }
-    
-    $movieCollection->load('reviews.user');
-    
+    $this->authorize('view', $collection);
+
+    $collection->load('reviews.user');
+
+    $movieCollection = $collection; // maintain view variable name
+
     return view('collections.show', compact('movieCollection'));
 }
 
-    public function edit(MovieCollection $movieCollection)
+    public function edit(MovieCollection $collection)
     {
-        // Simple type-safe check
-        if ((int)$movieCollection->user_id !== (int)auth()->id()) {
-            abort(403, 'Unauthorized');
-        }
+        $this->authorize('update', $collection);
+
+        $movieCollection = $collection;
         
         return view('collections.edit', compact('movieCollection'));
     }
 
-    public function update(Request $request, MovieCollection $movieCollection)
+    public function update(Request $request, MovieCollection $collection)
     {
-        // Simple type-safe check
-        if ((int)$movieCollection->user_id !== (int)auth()->id()) {
-            abort(403, 'Unauthorized');
-        }
+        $this->authorize('update', $collection);
 
         $validated = $request->validate([
             'is_watched' => 'nullable|boolean',
             'personal_notes' => 'nullable|string|max:1000',
         ]);
+
+        // Handle checkbox - if not present, it means unchecked
+        $validated['is_watched'] = $request->has('is_watched') ? true : false;
+
+        $collection->update($validated);
+
+        return redirect()->route('collections.show', $collection)
+            ->with('success', 'Collection updated successfully!');
 
         // Handle checkbox - if not present, it means unchecked
         $validated['is_watched'] = $request->has('is_watched') ? true : false;
@@ -115,28 +117,22 @@ $collection = MovieCollection::create([
             ->with('success', 'Collection updated successfully!');
     }
 
-    public function destroy(MovieCollection $movieCollection)
+    public function destroy(MovieCollection $collection)
     {
-        // Simple type-safe check
-        if ((int)$movieCollection->user_id !== (int)auth()->id()) {
-            abort(403, 'Unauthorized');
-        }
+        $this->authorize('delete', $collection);
 
-        $movieCollection->delete();
+        $collection->delete();
 
         return redirect()->route('collections.index')
             ->with('success', 'Movie removed from collection!');
     }
 
-    public function toggleWatched(MovieCollection $movieCollection)
+    public function toggleWatched(MovieCollection $collection)
     {
-        // Simple type-safe check
-        if ((int)$movieCollection->user_id !== (int)auth()->id()) {
-            abort(403, 'Unauthorized');
-        }
+        $this->authorize('update', $collection);
 
-        $movieCollection->update([
-            'is_watched' => !$movieCollection->is_watched
+        $collection->update([
+            'is_watched' => !$collection->is_watched
         ]);
 
         return redirect()->back()->with('success', 'Watch status updated!');

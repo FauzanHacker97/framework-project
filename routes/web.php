@@ -30,7 +30,7 @@ Route::middleware('auth')->group(function () {
 
     // Movie Collections
     Route::resource('collections', MovieCollectionController::class);
-    Route::post('collections/{movieCollection}/toggle-watched', [MovieCollectionController::class, 'toggleWatched'])
+    Route::post('collections/{collection}/toggle-watched', [MovieCollectionController::class, 'toggleWatched'])
         ->name('collections.toggle-watched');
 
     // Reviews
