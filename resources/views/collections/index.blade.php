@@ -1,4 +1,8 @@
 <x-app-layout>
+    @if($filter === 'all')
+        <x-slot name="title">Movie Collection & Review Tracker</x-slot>
+    @endif
+
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             {{ __('My Movie Collection') }}

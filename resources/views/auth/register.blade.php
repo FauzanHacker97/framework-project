@@ -1,4 +1,6 @@
 <x-guest-layout>
+    <x-slot name="title">Register - Movie Collection & Review Tracker</x-slot>
+
     <form method="POST" action="{{ route('register') }}">
         @csrf
 
